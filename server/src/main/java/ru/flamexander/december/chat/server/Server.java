@@ -48,6 +48,18 @@ public class Server {
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        ClientHandler receiver = null;
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(receiverUsername)) {
+                receiver = client;
+                break;
+            }
+        }
+        if (receiver == null) {
+            sender.sendMessage("Не найден " + receiverUsername);
+            return;
+        }
+        sender.sendMessage(message);
+        receiver.sendMessage(message);
     }
 }
