@@ -34,10 +34,17 @@ public class ClientHandler {
                             break;
                         }
                         if (message.startsWith("/w ")) {
-                            // TODO homework
+                            //privateMessage(this, message);
+                            String[] elements = message.split(" ", 3);
+                            if (elements.length < 3) {
+                                sendMessage("Некорректная команда /w");
+                            }
+                            System.out.println(message + " " + elements[1] + " " + elements[2]);
+                            server.sendPrivateMessage(this, elements[1], elements[2]);
                         }
+                    } else {
+                        server.broadcastMessage(username + ": " + message);
                     }
-                    server.broadcastMessage(username + ": " + message);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -48,6 +48,19 @@ public class Server {
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        System.out.println(sender.getUsername() + " " + receiverUsername + " " + message);
+        boolean findReciver = false;
+        for (ClientHandler clientHandler : clients) {
+            System.out.println(receiverUsername + " " + clientHandler.getUsername());
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage("<private> " + sender.getUsername() + ": " + message);
+                findReciver = true;
+            }
+        }
+        if (findReciver) {
+            sender.sendMessage("<private> " + sender.getUsername() + ": " + message);
+        } else {
+            sender.sendMessage("<private> Не найден пользователь: " + receiverUsername);
+        }
     }
 }
