@@ -34,7 +34,6 @@ public class ClientHandler {
                             break;
                         }
                         if (message.startsWith("/w ")) {
-                            // TODO homework  /w tom Hello
                             //privateMessage(this, message);
                             String[] elements = message.split(" ", 3);
                             if (elements.length < 3) {
@@ -53,14 +52,6 @@ public class ClientHandler {
                 disconnect();
             }
         }).start();
-    }
-
-    private void privateMessage(ClientHandler sender, String msg) {
-        String[] elements = msg.split(" ", 3);
-        if (elements.length < 3) {
-            sendMessage("Некорректная команда /w");
-        }
-        server.sendPrivateMessage(sender, elements[1], elements[2]);
     }
 
     public void sendMessage(String message) {
