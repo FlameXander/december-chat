@@ -38,13 +38,15 @@ public class ClientHandler {
             String message = in.readUTF();
             if (message.startsWith("/")) {
                 if (message.equals("/exit")) {
+                    sendMessage("/exit_confirmed");
                     break;
                 }
                 if (message.startsWith("/w ")) {
                     // TODO homework chat part 1
                 }
+            } else {
+                server.broadcastMessage(username + ": " + message);
             }
-            server.broadcastMessage(username + ": " + message);
         }
     }
 
