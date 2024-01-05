@@ -10,10 +10,10 @@ public class ClientHandler {
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
-    private String username;
+    private User user;
 
     public String getUsername() {
-        return username;
+        return user.getUsername();
     }
 
     public ClientHandler(Server server, Socket socket) throws IOException {
@@ -43,8 +43,14 @@ public class ClientHandler {
                 if (message.startsWith("/w ")) {
                     // TODO homework chat part 1
                 }
+                if (message.startsWith("/kick") && user.isAdmin()){
+                    String[] elements = message.split(" ", 2);
+                    String kikedUserName = elements[1];
+                    server.kickUser(kikedUserName);
+                }
+            } else {
+                server.broadcastMessage(getUsername() + ": " + message);
             }
-            server.broadcastMessage(username + ": " + message);
         }
     }
 
@@ -89,19 +95,19 @@ public class ClientHandler {
         }
         String login = elements[1];
         String password = elements[2];
-        String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
-        if (usernameFromUserService == null) {
+        User userFromUserService = server.getUserService().getUserByLoginAndPassword(login, password);
+        if (userFromUserService == null) {
             sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
             return false;
         }
-        if (server.isUserBusy(usernameFromUserService)) {
+        if (server.isUserBusy(userFromUserService.getUsername())) {
             sendMessage("СЕРВЕР: учетная запись уже занята");
             return false;
         }
-        username = usernameFromUserService;
+        user = userFromUserService;
         server.subscribe(this);
-        sendMessage("/authok " + username);
-        sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
+        sendMessage("/authok " + getUsername());
+        sendMessage("СЕРВЕР: " + getUsername() + ", добро пожаловать в чат!");
         return true;
     }
 
@@ -122,10 +128,9 @@ public class ClientHandler {
             sendMessage("СЕРВЕР: указанное имя пользователя уже занято");
             return false;
         }
-        server.getUserService().createNewUser(login, password, registrationUsername);
-        username = registrationUsername;
-        sendMessage("/authok " + username);
-        sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
+        user = server.getUserService().createNewUser(login, password, registrationUsername);
+        sendMessage("/authok " + getUsername());
+        sendMessage("СЕРВЕР: " + getUsername() + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
         server.subscribe(this);
         return true;
     }
