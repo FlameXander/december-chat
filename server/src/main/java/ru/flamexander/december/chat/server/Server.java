@@ -66,4 +66,15 @@ public class Server {
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
         // TODO homework
     }
+
+    public synchronized void kickUser(String kickedUserName){
+        if (isUserBusy(kickedUserName)) {
+            ClientHandler clientHandler = clients.stream().filter(c -> c.getUsername().equals(kickedUserName)).findFirst().get();
+            broadcastMessage("СЕРВЕР: Админ кикнул пользователя с ником '" + kickedUserName + "'");
+            clientHandler.disconnect();
+        } else {
+            broadcastMessage("СЕРВЕР: Админ пытался кикнуть пользователя с ником '"
+                    + kickedUserName + "', но такого пользователя нет в сети.");
+        }
+    }
 }
