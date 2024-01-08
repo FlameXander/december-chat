@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.rmi.ServerError;
 
 public class ClientHandler {
     private Server server;
@@ -35,6 +36,9 @@ public class ClientHandler {
                         }
                         if (message.startsWith("/w ")) {
                             // TODO homework
+                            String[] commandParts = message.split(" ", 3);
+                            server.sendPrivateMessage(this, commandParts[1], commandParts[2]);
+                            continue;
                         }
                     }
                     server.broadcastMessage(username + ": " + message);
