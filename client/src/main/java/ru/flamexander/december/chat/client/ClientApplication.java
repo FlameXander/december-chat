@@ -15,7 +15,7 @@ public class ClientApplication {
                 DataInputStream in = new DataInputStream(socket.getInputStream());
                 DataOutputStream out = new DataOutputStream(socket.getOutputStream())
         ) {
-            System.out.println("ÐŸÐ¾Ð´ÐºÐ»ÑŽÑ‡Ð¸Ð»Ð¸ÑÑŒ Ðº ÑÐµÑ€Ð²ÐµÑ€Ñƒ");
+            System.out.println("Ïîäêëþ÷èëèñü ê ñåðâåðó");
             Scanner scanner = new Scanner(System.in);
             new Thread(() -> {
                 try {
