@@ -49,5 +49,20 @@ public class Server {
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
         // TODO homework
+        boolean foundReceiver = false;
+
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage(sender.getUsername() + ": " + message);
+                sender.sendMessage(sender.getUsername() + ": " + message);
+                foundReceiver = true;
+                break; // Выходим из цикла, так как мы уже нашли получателя
+            }
+        }
+
+        if (!foundReceiver) {
+            // Отправляем отправителю сообщение об ошибке
+            sender.sendMessage("Пользователь " + receiverUsername + " не найден.");
+        }
     }
 }

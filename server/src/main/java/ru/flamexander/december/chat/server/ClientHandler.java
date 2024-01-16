@@ -33,11 +33,16 @@ public class ClientHandler {
                         if (message.equals("/exit")) {
                             break;
                         }
+
+                        // TODO homework
                         if (message.startsWith("/w ")) {
-                            // TODO homework
+                            String[] parts = message.split(" ", 3);
+                            server.sendPrivateMessage(this, parts[1], parts[2]);
                         }
+
+                    } else {
+                        server.broadcastMessage(username + ": " + message);
                     }
-                    server.broadcastMessage(username + ": " + message);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
