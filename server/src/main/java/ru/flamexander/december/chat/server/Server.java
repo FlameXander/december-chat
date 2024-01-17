@@ -6,6 +6,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Урок 23.Консольный сетевой чат. Часть 2
+ * ДЗ 16: Доработка консольного сетевого чата
+ */
 public class Server {
     private int port;
     private List<ClientHandler> clients;
@@ -80,5 +84,26 @@ public class Server {
             // Отправляем отправителю сообщение об ошибке
             sender.sendMessage("Пользователь " + receiverUsername + " не найден.");
         }
+    }
+
+    //TODO homework 2
+    public synchronized void userDisable(ClientHandler sender, String username) {
+        if (sender.getUsername().equals(username)) {
+            sender.sendMessage("Админ не может сам себя заблокировать!");
+            return;
+        }
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(username)) {
+                userService.setUserDisable(username, false); // Выставили флаг, что пользователь отключен
+                clientHandler.sendMessage("Вы заблокированы!");
+                sender.sendMessage("Вы заблокировали: " + username);
+                // Выкидываем юзера из листа клиентов.
+                clients.remove(clientHandler);
+                return; // Выходим из цикла, так как мы уже отключили username
+            }
+        }
+
+        // Если не нашли пользователя, то отправляем отправителю сообщение об ошибке
+        sender.sendMessage("Пользователь " + username + " не найден");
     }
 }

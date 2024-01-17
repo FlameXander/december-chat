@@ -12,7 +12,6 @@ public class ClientHandler {
     private DataInputStream in;
     private String username;
 
-
     public String getUsername() {
         return username;
     }
@@ -39,6 +38,11 @@ public class ClientHandler {
     private void listenUserChatMessages() throws IOException {
         while (true) {
             String message = in.readUTF();
+            if (!server.getUserService().isUserEnable(username)) {
+                // Если пользователь заблокирован, игнорируем его сообщения
+                sendMessage("СЕРВЕР: Вы заблокированы и не можете читать и отправлять сообщения в чат");
+                continue;
+            }
             if (message.startsWith("/")) {
                 if (message.equals("/exit")) {
                     break;
@@ -48,6 +52,18 @@ public class ClientHandler {
                 if (message.startsWith("/w ")) {
                     String[] parts = message.split(" ", 3);
                     server.sendPrivateMessage(this, parts[1], parts[2]);
+                }
+
+                // TODO homework - Роли пользователей
+                if (message.startsWith("/kick ") && server.getUserService().isUserAdmin(username)) {
+                    String[] parts = message.split(" ", 2);
+                    if (parts.length != 2) {
+                        sendMessage("СЕРВЕР: Некорректная команда");
+                    } else {
+                        server.userDisable(this, parts[1]);
+                    }
+                } else {
+                    sendMessage("СЕРВЕР: У вас не достаточно прав для выполнения этой команды");
                 }
 
             } else {
@@ -98,6 +114,11 @@ public class ClientHandler {
         String login = elements[1];
         String password = elements[2];
         String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
+        // Проверяем, этот пользователь заблокирован или нет
+        if (!server.getUserService().isUserEnable(usernameFromUserService)) {
+            sendMessage("СЕРВЕР: Вы заблокированы!");
+            return false;
+        }
         if (usernameFromUserService == null) {
             sendMessage("СЕРВЕР: Пользователя с указанным логином/паролем не существует");
             return false;
@@ -108,7 +129,7 @@ public class ClientHandler {
         }
         username = usernameFromUserService;
         server.subscribe(this);
-        sendMessage("/authok " + username);
+        sendMessage("/authok " + username); // Служебное сообщение
         sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
         return true;
     }
@@ -132,7 +153,7 @@ public class ClientHandler {
         }
         server.getUserService().createNewUser(login, password, registrationUsername);
         username = registrationUsername;
-        sendMessage("/authok " + username);
+        sendMessage("/authok " + username); // Служебное сообщение
         sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
         server.subscribe(this);
         return true;
