@@ -9,11 +9,17 @@ public class InMemoryUserService implements UserService {
         private String login;
         private String password;
         private String username;
+        private String roles;
 
-        public User(String login, String password, String username) {
+        public String getRoles() {
+            return roles;
+        }
+
+        public User(String login, String password, String username, String roles) {
             this.login = login;
             this.password = password;
             this.username = username;
+            this.roles = roles;
         }
     }
 
@@ -21,9 +27,9 @@ public class InMemoryUserService implements UserService {
 
     public InMemoryUserService() {
         this.users = new ArrayList<>(Arrays.asList(
-                new User("login1", "pass1", "user1"),
-                new User("login2", "pass2", "user2"),
-                new User("login3", "pass3", "user3")
+                new User("login1", "pass1", "Admin", "ADMIN"),
+                new User("login2", "pass2", "user2", "USER"),
+                new User("login3", "pass3", "user3", "USER")
         ));
     }
 
@@ -39,7 +45,7 @@ public class InMemoryUserService implements UserService {
 
     @Override
     public void createNewUser(String login, String password, String username) {
-        users.add(new User(login, password, username));
+        users.add(new User(login, password, username, "USER")); // Есть админ. Все остальные будут простыми пользователями
     }
 
     @Override
