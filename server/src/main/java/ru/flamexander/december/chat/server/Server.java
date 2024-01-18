@@ -99,6 +99,8 @@ public class Server {
                 sender.sendMessage("Вы заблокировали: " + username);
                 // Выкидываем юзера из листа клиентов.
                 clients.remove(clientHandler);
+                // Отключаем юзера от рассылки
+                unsubscribe(clientHandler);
                 return; // Выходим из цикла, так как мы уже отключили username
             }
         }
