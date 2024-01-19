@@ -51,12 +51,7 @@ public class ClientHandler {
                 // TODO homework - Приватные сообщения
                 if (message.startsWith("/w ")) {
                     String[] parts = message.split(" ", 3);
-                    if (parts.length != 3) {
-                        sendMessage("СЕРВЕР: Некорректная команда");
-                        continue;
-                    } else {
-                        server.sendPrivateMessage(this, parts[1], parts[2]);
-                    }
+                    server.sendPrivateMessage(this, parts[1], parts[2]);
                 }
 
                 // TODO homework - Роли пользователей
@@ -68,7 +63,6 @@ public class ClientHandler {
                         server.userDisable(this, parts[1]);
                     }
                 } else {
-                    // Здесь повторно выводится сообщение при приватке
                     sendMessage("СЕРВЕР: У вас не достаточно прав для выполнения этой команды");
                 }
 
