@@ -10,7 +10,6 @@ public class InMemoryUserService implements UserService {
         private String password;
         private String username;
         private String userRole;
-
         private boolean userEnable;
 
         public User(String login, String password, String username, String userRole, boolean userEnable) {
@@ -28,7 +27,6 @@ public class InMemoryUserService implements UserService {
         return users;
     }
 
-    // По моему, этот метод нужно приватным делать
     public InMemoryUserService() {
         this.users = new ArrayList<>(Arrays.asList(
                 new User("login1", "pass1", "Admin", "ADMIN", true),
@@ -37,6 +35,7 @@ public class InMemoryUserService implements UserService {
         ));
     }
 
+    // Блокируем пользователя
     @Override
     public void setUserDisable(String username, boolean disable) {
         for (User u : users) {
@@ -46,6 +45,7 @@ public class InMemoryUserService implements UserService {
         }
     }
 
+    // Ищем, есть такой пользователь с таким логином
     @Override
     public String getUsernameByLoginAndPassword(String login, String password) {
         for (User u : users) {
@@ -56,12 +56,14 @@ public class InMemoryUserService implements UserService {
         return null;
     }
 
+    // Регистрируем нового пользователя
     @Override
     public void createNewUser(String login, String password, String username) {
         // Есть админ. Все остальные, по умолчанию, будут простыми пользователями и включенные true
         users.add(new User(login, password, username, "USER", true)); // Есть админ. Все остальные будут простыми пользователями
     }
 
+    // Проверяем, свободность логина
     @Override
     public boolean isLoginAlreadyExist(String login) {
         for (User user : users) {
@@ -72,6 +74,7 @@ public class InMemoryUserService implements UserService {
         return false;
     }
 
+    // Проверяем свободность имени
     @Override
     public boolean isUsernameAlreadyExist(String username) {
         for (User user : users) {
@@ -82,6 +85,7 @@ public class InMemoryUserService implements UserService {
         return false;
     }
 
+    // Проверяем, что пользователь является админом
     @Override
     public boolean isUserAdmin(String username) {
         for (User user : users) {
@@ -94,6 +98,7 @@ public class InMemoryUserService implements UserService {
         return false;
     }
 
+    // Проверяем, включен ли пользователь
     @Override
     public boolean isUserEnable(String username) {
         for (User user : users) {
