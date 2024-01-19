@@ -11,23 +11,6 @@ public class InJdbcUserService implements UserService {
     private String user_name_db = "user_hw18";
     private String password_user_db = "1234";
 
-    class User {
-        private String login;
-        private String password;
-        private String username;
-        private String userRole;
-        private boolean userEnable;
-
-        public User(String login, String password, String username, String userRole, boolean userEnable) {
-            this.login = login;
-            this.password = password;
-            this.username = username;
-            this.userRole = userRole;
-            this.userEnable = userEnable;
-        }
-    }
-    private List<User> users;
-
     @Override
     public void setUserDisable(String username, boolean disable) {
         String sql = "UPDATE public.users SET user_enabled = ? WHERE user_name = ?";

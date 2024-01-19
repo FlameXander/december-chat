@@ -28,7 +28,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.printf("Сервер запущен на порту %d. Ожидание подключения клиентов\n", port);
             // Используем БД Postgres
-            userService = new InMemoryUserService();
+            userService = new InJdbcUserService();
             System.out.println("Запущен сервис для работы с пользователями");
             while (true) {
                 Socket socket = serverSocket.accept();
