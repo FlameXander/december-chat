@@ -34,10 +34,17 @@ public class ClientHandler {
                             break;
                         }
                         if (message.startsWith("/w ")) {
+                            System.out.println("in private message from " + username + " = " + message);
+                            int idx = message.indexOf(" ", 3);
+                            String userName = message.substring(3, idx);
+                            String pvtMessage = message.substring(idx + 1, message.length());
+                            server.sendPrivateMessage(this, userName, pvtMessage);
                             // TODO homework
                         }
+                    } else {
+                        server.broadcastMessage(username + ": " + message);
                     }
-                    server.broadcastMessage(username + ": " + message);
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
