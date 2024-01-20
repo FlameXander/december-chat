@@ -48,12 +48,6 @@ public class Server {
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        for (ClientHandler clientHandler : clients) {
-            if (clientHandler.getUsername().equals(receiverUsername)) {
-                clientHandler.sendMessage("/pvt " + sender.getUsername() + ": " + message);
-                sender.sendMessage("/pvt " + sender.getUsername() + ": " + message);
-                break;
-            }
-        }
+        // TODO homework
     }
 }
