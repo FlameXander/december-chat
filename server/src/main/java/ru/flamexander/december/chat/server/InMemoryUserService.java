@@ -9,12 +9,24 @@ public class InMemoryUserService implements UserService {
         private String login;
         private String password;
         private String username;
+        private boolean isAdmin;
+        public boolean isAdmin() {
+            return isAdmin;
+        }
 
         public User(String login, String password, String username) {
             this.login = login;
             this.password = password;
             this.username = username;
         }
+
+        public User(String login, String password, String username, boolean isAdmin) {
+            this.login = login;
+            this.password = password;
+            this.username = username;
+            this.isAdmin = isAdmin;
+        }
+
     }
 
     private List<User> users;
@@ -23,7 +35,7 @@ public class InMemoryUserService implements UserService {
         this.users = new ArrayList<>(Arrays.asList(
                 new User("login1", "pass1", "user1"),
                 new User("login2", "pass2", "user2"),
-                new User("login3", "pass3", "user3")
+                new User("login3", "pass3", "user3", true)
         ));
     }
 
@@ -35,6 +47,16 @@ public class InMemoryUserService implements UserService {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isUserAdmin(String username) {
+        for (User u : users) {
+            if(u.username.equals(username)){
+                return u.isAdmin();
+            }
+        }
+        return false;
     }
 
     @Override

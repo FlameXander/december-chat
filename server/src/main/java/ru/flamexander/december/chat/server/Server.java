@@ -3,6 +3,7 @@ package ru.flamexander.december.chat.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,5 +66,23 @@ public class Server {
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
         // TODO homework
+        for (ClientHandler receiver : clients) {
+            sender.sendMessage("whisper to " + receiverUsername + ": " + message);
+            receiver.sendMessage("whisper from " + sender.getUsername() + ": " + message);
+            return;
+        }
+    }
+    public synchronized ClientHandler kickUser(ClientHandler user, String username) {
+        if (user.isAdmin()){
+            for (ClientHandler c : clients) {
+                if (c.getUsername().equals(username)) {
+                    return c;
+                }
+            }
+            user.sendMessage("user not found");
+            return null;
+        }
+        user.sendMessage("admin command, permission denied");
+        return null;
     }
 }

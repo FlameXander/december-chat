@@ -31,6 +31,10 @@ public class ClientApplication {
                     }
                     while (true) {
                         String message = in.readUTF();
+                        if(message.startsWith("-kicked ")){
+                            System.out.println(message);
+                            System.exit(0);
+                        }
                         System.out.println(message);
                     }
                 } catch (IOException e) {

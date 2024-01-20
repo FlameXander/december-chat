@@ -11,6 +11,15 @@ public class ClientHandler {
     private DataOutputStream out;
     private DataInputStream in;
     private String username;
+    private boolean isAdmin;
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    private void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
 
     public String getUsername() {
         return username;
@@ -42,6 +51,19 @@ public class ClientHandler {
                 }
                 if (message.startsWith("/w ")) {
                     // TODO homework chat part 1
+                    String[] commandParts = message.split(" ", 3);
+                    server.sendPrivateMessage(this, commandParts[1], commandParts[2]);
+                    continue;
+                }
+                if (message.startsWith("/kick ")) {
+                    String[] s = message.split(" ", 2);
+                    ClientHandler c = server.kickUser(this, s[1]);
+                    if (c == null) {
+                        continue;
+                    }
+                    c.sendMessage("-kicked by ADMIN");
+                    server.broadcastMessage(s[1] + " was kicked by ADMIN");
+                    continue;
                 }
             }
             server.broadcastMessage(username + ": " + message);
@@ -100,13 +122,16 @@ public class ClientHandler {
         }
         username = usernameFromUserService;
         server.subscribe(this);
+        if (server.getUserService().isUserAdmin(username)) {
+            this.setAdmin(true);
+        }
         sendMessage("/authok " + username);
         sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
         return true;
     }
 
     private boolean register(String message) {
-        String[] elements = message.split(" "); // /auth login1 pass1 user1
+        String[] elements = message.split(" "); // /register login1 pass1 user1
         if (elements.length != 4) {
             sendMessage("СЕРВЕР: некорректная команда аутентификации");
             return false;
