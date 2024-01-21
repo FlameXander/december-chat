@@ -5,4 +5,7 @@ public interface UserService {
     void createNewUser(String login, String password, String username);
     boolean isLoginAlreadyExist(String login);
     boolean isUsernameAlreadyExist(String username);
+    String getRoleByUserName(String username);
+    void setUserBlock(String username);
+    void setUserUnblock(String username);
 }

@@ -40,8 +40,14 @@ public class ClientHandler {
                 if (message.equals("/exit")) {
                     break;
                 }
+                if (message.startsWith("/kick")) {
+                    server.kickUserFromChat(this, message);
+                }
                 if (message.startsWith("/w ")) {
-                    // TODO homework chat part 1
+                    int idx = message.indexOf(" ", 3);
+                    String userName = message.substring(3, idx);
+                    String pvtMessage = message.substring(idx + 1, message.length());
+                    server.sendPrivateMessage(this, userName, pvtMessage);
                 }
             }
             server.broadcastMessage(username + ": " + message);
