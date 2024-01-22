@@ -55,7 +55,7 @@ public class InMemoryUserService implements UserService {
     public void createNewUser(String login, String password, String username, UserRole userRole) {
         users.add(new User(login, password, username, userRole));
     }
-    @Override
+   /* @Override
     public void deleteUser(String username){
         if(isUsernameAlreadyExist(username)){
             for (User u : users) {
@@ -67,7 +67,7 @@ public class InMemoryUserService implements UserService {
         } else{
             System.out.println("Пользователя с таким именем нет");
         }
-    }
+    }*/
 
     @Override
     public boolean isLoginAlreadyExist(String login) {

@@ -62,6 +62,14 @@ public class Server {
         }
         return false;
     }
+    public ClientHandler getClientHandlerByUsername(String username) {
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(username)) {
+                return clientHandler;
+            }
+        }
+        return null;
+    }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
         // TODO homework
