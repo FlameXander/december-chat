@@ -5,13 +5,18 @@ import java.util.Arrays;
 import java.util.List;
 
 public class InMemoryUserService implements UserService {
-    class User {
+    static class User {
         private String login;
         private String password;
         private String username;
         private boolean isAdmin;
+
         public boolean isAdmin() {
             return isAdmin;
+        }
+
+        public String getUsername() {
+            return username;
         }
 
         public User(String login, String password, String username) {
@@ -52,7 +57,7 @@ public class InMemoryUserService implements UserService {
     @Override
     public boolean isUserAdmin(String username) {
         for (User u : users) {
-            if(u.username.equals(username)){
+            if (u.username.equals(username)) {
                 return u.isAdmin();
             }
         }

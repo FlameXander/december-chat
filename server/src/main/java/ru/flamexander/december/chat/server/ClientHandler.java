@@ -70,6 +70,7 @@ public class ClientHandler {
         }
     }
 
+
     public void sendMessage(String message) {
         try {
             out.writeUTF(message);
@@ -111,18 +112,28 @@ public class ClientHandler {
         }
         String login = elements[1];
         String password = elements[2];
-        String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
-        if (usernameFromUserService == null) {
+        if (!server.dbConnection()) {
+            System.out.println("DB not answering");
+            return false;
+        }
+        InMemoryUserService.User user = server.dbAuthorization(login, password);
+        if (user == null) {
             sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
             return false;
         }
-        if (server.isUserBusy(usernameFromUserService)) {
+
+//        String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
+//        if (usernameFromUserService == null) {
+//            sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
+//            return false;
+//        }
+        if (server.isUserBusy(user.getUsername())) {
             sendMessage("СЕРВЕР: учетная запись уже занята");
             return false;
         }
-        username = usernameFromUserService;
+        username = user.getUsername();
         server.subscribe(this);
-        if (server.getUserService().isUserAdmin(username)) {
+        if (user.isAdmin()) {
             this.setAdmin(true);
         }
         sendMessage("/authok " + username);
@@ -139,15 +150,30 @@ public class ClientHandler {
         String login = elements[1];
         String password = elements[2];
         String registrationUsername = elements[3];
-        if (server.getUserService().isLoginAlreadyExist(login)) {
+
+        if (!server.dbConnection()) {
+            System.out.println("DB not answering");
+            return false;
+        }
+        if (server.isLoginAlreadyExists(login)) {
             sendMessage("СЕРВЕР: указанный login уже занят");
             return false;
         }
-        if (server.getUserService().isUsernameAlreadyExist(registrationUsername)) {
+
+//        if (server.getUserService().isLoginAlreadyExist(login)) {
+//            sendMessage("СЕРВЕР: указанный login уже занят");
+//            return false;
+//        }
+        if (server.isUsernameAlreadyExists(registrationUsername)) {
             sendMessage("СЕРВЕР: указанное имя пользователя уже занято");
             return false;
         }
-        server.getUserService().createNewUser(login, password, registrationUsername);
+//        if (server.getUserService().isUsernameAlreadyExist(registrationUsername)) {
+//            sendMessage("СЕРВЕР: указанное имя пользователя уже занято");
+//            return false;
+//        }
+//        server.getUserService().createNewUser(login, password, registrationUsername);
+        server.dbRegistration(login, password, registrationUsername);
         username = registrationUsername;
         sendMessage("/authok " + username);
         sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
