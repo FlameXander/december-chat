@@ -4,11 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.sql.*;
-import java.util.HashSet;
-import java.util.Set;
 
-import static java.sql.DriverManager.getConnection;
 
 public class ClientHandler {
     private Server server;
@@ -16,11 +12,6 @@ public class ClientHandler {
     private DataOutputStream out;
     private DataInputStream in;
     private String username;
-    private String pass;
-    private UserRole role;
-    private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/mydb";
-    private static final String SELECT_USER_SQL = "SELECT u.login, u.password from Users u";
-   private static final String SELECT_ROLES_FOR_USER = "SELECT r.id, r.name from usertorole left join roles r on r.id = UserToRole.role_id where user_id = ?";
 
 
     public String getUsername() {
@@ -74,8 +65,6 @@ public class ClientHandler {
         String[] elements = message.split(" ", 2);
         if (elements.length != 2) {
             sendMessage("СЕРВЕР: некорректная команда");
-        } else if (role != UserRole.ADMIN) {
-            sendMessage("СЕРВЕР: у Вас нет прав отключать пользователей");
         } else {
             String nameToKick = elements[1];
             ClientHandler clientToKick = server.getClientHandlerByUsername(nameToKick);
@@ -122,67 +111,32 @@ public class ClientHandler {
         }
         String login = elements[1];
         String password = elements[2];
-
-        try (Connection connection = getConnection(DATABASE_URL, "postgres", "pass")) {
-            try (Statement statement = connection.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery(SELECT_USER_SQL)) {
-                    if (resultSet.next()) {
-                        username = resultSet.getString(1);
-                        pass = resultSet.getString(2);
-                        if (login.equals(username) && password.equals(pass)){
-                        server.subscribe(this);
-                        Set<Role> roles =  getUserRoleByUsername(username);
-                            assert roles != null;
-                            for (Role role1 : roles) {
-                                System.out.println(role1.getName());
-                            }
-                            sendMessage("/authok " + username);
-                        sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
-                        return true;
-                        }
-                            }
-                        }
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
-                return false;
-            }
-
-
-    private  Set<Role> getUserRoleByUsername (String username){
-        try (Connection connection = getConnection(DATABASE_URL, "postgres", "pass")){
-              try(PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ROLES_FOR_USER)) {
-                  preparedStatement.setString(1, username);
-                  try(ResultSet rs = preparedStatement.executeQuery()) {
-                      Set<Role> roles = new HashSet<>();
-                      while (rs.next()) {
-                          Integer id = rs.getInt(1);
-                          String name = rs.getString(2);
-                          Role role = new Role(id, name);
-                          roles.add(role);
-                      }
-                     return roles;
-                  }
-
-          }
-    } catch (SQLException e) {
-            e.printStackTrace();
+        String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
+        if (usernameFromUserService == null) {
+            sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
+            return false;
         }
-        return null;
+        if (server.isUserBusy(usernameFromUserService)) {
+            sendMessage("СЕРВЕР: учетная запись уже занята");
+            return false;
+        }
+        username = usernameFromUserService;
+        server.subscribe(this);
+        sendMessage("/authok " + username);
+        sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
+        return true;
     }
 
+
     private boolean register(String message) {
-        String[] elements = message.split(" "); // /auth login1 pass1 user1
-        if (elements.length != 5) {
+        String[] elements = message.split(" ");
+        if (elements.length != 4) {
             sendMessage("СЕРВЕР: некорректная команда аутентификации");
             return false;
         }
         String login = elements[1];
         String password = elements[2];
         String registrationUsername = elements[3];
-        UserRole userRole = UserRole.valueOf(elements[4]);
 
         if (server.getUserService().isLoginAlreadyExist(login)) {
             sendMessage("СЕРВЕР: указанный login уже занят");
@@ -192,9 +146,8 @@ public class ClientHandler {
             sendMessage("СЕРВЕР: указанное имя пользователя уже занято");
             return false;
         }
-        server.getUserService().createNewUser(login, password, registrationUsername, userRole);
+        server.getUserService().createNewUser(login, password, registrationUsername);
         username = registrationUsername;
-        role = userRole;
         sendMessage("/authok " + username);
         sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
         server.subscribe(this);

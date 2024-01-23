@@ -18,7 +18,7 @@ public class ClientApplication {
     public static void main(String[] args) {
         try
            {
-               socket = new Socket("localhost", 8189);
+               socket = new Socket("localhost", 8080);
                in = new DataInputStream(socket.getInputStream());
                out = new DataOutputStream(socket.getOutputStream());
                System.out.println("Подключились к серверу");
