@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+
 public class ClientHandler {
     private Server server;
     private Socket socket;
@@ -12,7 +13,6 @@ public class ClientHandler {
     private DataInputStream in;
     private String username;
 
-    private static int clientsCount = 0;
 
     public String getUsername() {
         return username;
@@ -23,28 +23,43 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        clientsCount++;
-        this.username = "user" + clientsCount;
         new Thread(() -> {
             try {
-                while (true) {
-                    String message = in.readUTF();
-                    if (message.startsWith("/")) {
-                        if (message.equals("/exit")) {
-                            break;
-                        }
-                        if (message.startsWith("/w ")) {
-                            // TODO homework
-                        }
-                    }
-                    server.broadcastMessage(username + ": " + message);
-                }
+                authentication();
+                listenUserChatMessages();
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 disconnect();
             }
         }).start();
+    }
+
+    private void listenUserChatMessages() throws IOException {
+        while (true) {
+            String message = in.readUTF();
+            if (message.startsWith("/")) {
+                if (message.equals("/exit")) {
+                    sendMessage("/exit confirmed");
+                    break;
+                } else if (message.startsWith("/kick")) {
+                    String[] parts = message.split(" ");
+                    if (parts.length == 2) {
+                        String usernameToKick = parts[1];
+                        String senderRole = server.getUserService().getRoleByUsername(username);
+                        if ("ADMIN".equals(senderRole)) {
+                            kickUser(usernameToKick);
+                        } else {
+                            sendMessage("СЕРВЕР: У Вас нет прав отключать пользователей.");
+                        }
+                    } else {
+                        sendMessage("Некорректная команда.");
+                    }
+                }
+            } else {
+                server.broadcastMessage(username + ": " + message);
+            }
+        }
     }
 
     public void sendMessage(String message) {
@@ -54,6 +69,20 @@ public class ClientHandler {
             e.printStackTrace();
         }
     }
+
+    public void kickUser(String message) {
+        String[] elements = message.split(" ", 2);
+            String nameToKick = elements[1];
+            ClientHandler clientToKick = server.getClientHandlerByUsername(nameToKick);
+            if (clientToKick != null) {
+                clientToKick.sendMessage("СЕРВЕР: Вы были отключены администратором.");
+                clientToKick.disconnect();
+                server.broadcastMessage(nameToKick + " был исключен из чата пользователем " + username);
+            } else {
+                sendMessage("СЕРВЕР: Пользователь с именем '" + nameToKick + "' не найден.");
+            }
+    }
+
 
     public void disconnect() {
         server.unsubscribe(this);
@@ -77,6 +106,74 @@ public class ClientHandler {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private boolean tryToAuthenticate(String message) {
+        String[] elements = message.split(" "); // /auth login1 pass1
+        if (elements.length != 3) {
+            sendMessage("СЕРВЕР: некорректная команда аутентификации");
+            return false;
+        }
+        String login = elements[1];
+        String password = elements[2];
+        String usernameFromUserService = server.getUserService().getUsernameByLoginAndPassword(login, password);
+        if (usernameFromUserService == null) {
+            sendMessage("СЕРВЕР: пользователя с указанным логин/паролем не существует");
+            return false;
+        }
+        if (server.isUserBusy(usernameFromUserService)) {
+            sendMessage("СЕРВЕР: учетная запись уже занята");
+            return false;
+        }
+        username = usernameFromUserService;
+        server.subscribe(this);
+        sendMessage("/authok " + username);
+        sendMessage("СЕРВЕР: " + username + ", добро пожаловать в чат!");
+        return true;
+    }
+
+
+    private boolean register(String message) {
+        String[] elements = message.split(" ");
+        if (elements.length != 4) {
+            sendMessage("СЕРВЕР: некорректная команда аутентификации");
+            return false;
+        }
+        String login = elements[1];
+        String password = elements[2];
+        String registrationUsername = elements[3];
+
+        if (server.getUserService().isLoginAlreadyExist(login)) {
+            sendMessage("СЕРВЕР: указанный login уже занят");
+            return false;
+        }
+        if (server.getUserService().isUsernameAlreadyExist(registrationUsername)) {
+            sendMessage("СЕРВЕР: указанное имя пользователя уже занято");
+            return false;
+        }
+        server.getUserService().createNewUser(login, password, registrationUsername);
+        username = registrationUsername;
+        sendMessage("/authok " + username);
+        sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
+        server.subscribe(this);
+        return true;
+    }
+
+    private void authentication() throws IOException {
+        while (true) {
+            String message = in.readUTF();
+            boolean isSucceed = false;
+            if (message.startsWith("/auth ")) {
+                isSucceed = tryToAuthenticate(message);
+            } else if (message.startsWith("/register ")) {
+                isSucceed = register(message);
+            } else {
+                sendMessage("СЕРВЕР: требуется войти в учетную запись или зарегистрироваться");
+            }
+            if (isSucceed) {
+                break;
+            }
         }
     }
 }
