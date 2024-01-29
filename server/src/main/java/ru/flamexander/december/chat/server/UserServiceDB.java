@@ -9,7 +9,7 @@ public class UserServiceDB implements UserService {
     private static final String PASS = "pass";
     private static final String SELECT_ROLES_FOR_USER = "SELECT r.name FROM roles r " +
             "JOIN user_role ur on r.id = ur.role_id " +
-            "JOIN users u on ur.user_id = u.login " + "WHERE u.username ?";
+            "JOIN users u on ur.userid = u.id " + "WHERE u.username ?";
 
     @Override
     public String getUsernameByLoginAndPassword(String login, String password) {
@@ -45,9 +45,7 @@ public class UserServiceDB implements UserService {
                 try (ResultSet genKeys = insertUser.getGeneratedKeys()){
                     if (genKeys.next()) {
                         int userID = genKeys.getInt(1);
-
-                        String insertUserRoleQuery = "INSERT INTO usertorole (user_id, role_id) VALUES (?," +
-                        "SELECT role_id FROM roles WHERE name = 'USER'))";
+                        String insertUserRoleQuery = "INSERT INTO user_role (userid, role_id) "  + "VALUES (?, (SELECT id FROM roles WHERE name = 'USER'))";
                         try (PreparedStatement insertUserRole = connection.prepareStatement(insertUserRoleQuery)){
                             insertUserRole.setInt(1, userID);
                             insertUserRole.executeUpdate();

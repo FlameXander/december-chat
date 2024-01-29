@@ -8,7 +8,7 @@ import java.util.Locale;
 import java.util.Scanner;
 
 public class ClientApplication {
-    private static String username;
+    static String username;
     private static Socket socket;
     private static DataInputStream in;
     private static DataOutputStream out;
@@ -18,7 +18,7 @@ public class ClientApplication {
     public static void main(String[] args) {
         try
            {
-               socket = new Socket("localhost", 8080);
+               socket = new Socket("localhost", 8181);
                in = new DataInputStream(socket.getInputStream());
                out = new DataOutputStream(socket.getOutputStream());
                System.out.println("Подключились к серверу");

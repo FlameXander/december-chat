@@ -42,10 +42,19 @@ public class ClientHandler {
                 if (message.equals("/exit")) {
                     sendMessage("/exit confirmed");
                     break;
-                } else if (message.startsWith("/kick ")) {
-                    kickUser(message);
-                } else {
-                    server.broadcastMessage(message);
+                } else if (message.startsWith("/kick")) {
+                    String[] parts = message.split(" ");
+                    if (parts.length == 2) {
+                        String usernameToKick = parts[1];
+                        String senderRole = server.getUserService().getRoleByUsername(username);
+                        if ("ADMIN".equals(senderRole)) {
+                            kickUser(usernameToKick);
+                        } else {
+                            sendMessage("СЕРВЕР: У Вас нет прав отключать пользователей.");
+                        }
+                    } else {
+                        sendMessage("Некорректная команда.");
+                    }
                 }
             } else {
                 server.broadcastMessage(username + ": " + message);
@@ -63,18 +72,15 @@ public class ClientHandler {
 
     public void kickUser(String message) {
         String[] elements = message.split(" ", 2);
-        if (elements.length != 2) {
-            sendMessage("СЕРВЕР: некорректная команда");
-        } else {
             String nameToKick = elements[1];
             ClientHandler clientToKick = server.getClientHandlerByUsername(nameToKick);
             if (clientToKick != null) {
                 clientToKick.sendMessage("СЕРВЕР: Вы были отключены администратором.");
                 clientToKick.disconnect();
+                server.broadcastMessage(nameToKick + " был исключен из чата пользователем " + username);
             } else {
                 sendMessage("СЕРВЕР: Пользователь с именем '" + nameToKick + "' не найден.");
             }
-        }
     }
 
 
