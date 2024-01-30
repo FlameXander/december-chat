@@ -48,6 +48,17 @@ public class Server {
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        boolean flag = false;
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage("From " + sender.getUsername() + ": " + message);
+                sender.sendMessage(sender.getUsername() + ": " + message);
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            sender.sendMessage("user \"" + receiverUsername + "\" undefined");
+        }
     }
 }
