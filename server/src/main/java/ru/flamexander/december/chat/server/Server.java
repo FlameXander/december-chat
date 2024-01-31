@@ -64,6 +64,37 @@ public class Server {
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        boolean flag = false;
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage("From " + sender.getUsername() + ": " + message);
+                sender.sendMessage(sender.getUsername() + ": " + message);
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            sender.sendMessage("user \"" + receiverUsername + "\" undefined");
+        }
+    }
+
+    public void kickUser(String message, ClientHandler admin) {
+        if (getUserService().isUserAdmin(admin.getUsername())) {
+            String userNameForKick = message.split(" ")[1];
+            boolean flag = false;
+            for (ClientHandler cli : clients) {
+                if (cli.getUsername().equals(userNameForKick)) {
+                    broadcastMessage("Клиент " + cli.getUsername() + " был кикнут админом чата");
+                    sendPrivateMessage(admin, cli.getUsername(), "Вы кикнуты");
+                    unsubscribe(cli);
+                    flag = true;
+                }
+            }
+            if (!flag) {
+                admin.sendMessage("Пользователя с именем " + userNameForKick + " не существует");
+            }
+        } else {
+            admin.sendMessage("Нет прав на /kick");
+        }
     }
 }

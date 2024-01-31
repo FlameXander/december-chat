@@ -9,11 +9,13 @@ public class InMemoryUserService implements UserService {
         private String login;
         private String password;
         private String username;
+        private String role;
 
         public User(String login, String password, String username) {
             this.login = login;
             this.password = password;
             this.username = username;
+            this.role = "USER";
         }
     }
 
@@ -56,6 +58,24 @@ public class InMemoryUserService implements UserService {
     public boolean isUsernameAlreadyExist(String username) {
         for (User u : users) {
             if (u.username.equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    @Override
+    public void setRole(String role, String registrationUsername) {
+        for (User u : users) {
+            if (u.username.equals(registrationUsername)) {
+                u.role = role;
+            }
+        }
+    }
+
+    @Override
+    public boolean isUserAdmin(String username) {
+        for (User u : users) {
+            if (u.username.equals(username) && u.role.equals("ADMIN")) {
                 return true;
             }
         }

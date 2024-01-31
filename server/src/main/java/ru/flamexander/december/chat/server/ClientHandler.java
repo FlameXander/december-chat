@@ -4,6 +4,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ClientHandler {
     private Server server;
@@ -11,6 +14,7 @@ public class ClientHandler {
     private DataOutputStream out;
     private DataInputStream in;
     private String username;
+    private String keyWordForAdmin = "1Qwerty/";
 
     public String getUsername() {
         return username;
@@ -38,10 +42,18 @@ public class ClientHandler {
             String message = in.readUTF();
             if (message.startsWith("/")) {
                 if (message.equals("/exit")) {
+                    sendMessage("/exit_confirmed");
                     break;
                 }
                 if (message.startsWith("/w ")) {
-                    // TODO homework chat part 1
+                    String[] recipient = message.split(" ", 3);
+                    System.out.println(recipient[2]);
+                    server.sendPrivateMessage(this, recipient[1], recipient[2]);
+                    continue;
+                }
+                if (message.startsWith("/kick ") || message.startsWith("/kick")) {
+                    server.kickUser(message, this);
+                    continue;
                 }
             }
             server.broadcastMessage(username + ": " + message);
@@ -105,8 +117,17 @@ public class ClientHandler {
         return true;
     }
 
+    private List<String> checkLengthString(String message) {
+        List<String> elements = new ArrayList<>(Arrays.asList(message.split(" ")));
+        if (elements.size() == 5 && elements.get(4).equals(keyWordForAdmin)) {  // /auth login1 pass1 user1 key
+            elements.set(0, "ADMIN");
+            elements.remove(4);
+        }
+        return elements;
+    }
+
     private boolean register(String message) {
-        String[] elements = message.split(" "); // /auth login1 pass1 user1
+        String[] elements = checkLengthString(message).toArray(new String[0]);
         if (elements.length != 4) {
             sendMessage("СЕРВЕР: некорректная команда аутентификации");
             return false;
@@ -127,6 +148,8 @@ public class ClientHandler {
         sendMessage("/authok " + username);
         sendMessage("СЕРВЕР: " + username + ", вы успешно прошли регистрацию, добро пожаловать в чат!");
         server.subscribe(this);
+        if (elements[0].equals("ADMIN"))
+            server.getUserService().setRole("ADMIN", registrationUsername);
         return true;
     }
 
