@@ -3,6 +3,7 @@ package ru.flamexander.december.chat.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class Server {
         }
     }
 
-    public void kickUser(String message, ClientHandler admin) {
+    public void kickUser(String message, ClientHandler admin) throws SQLException {
         if (getUserService().isUserAdmin(admin.getUsername())) {
             String userNameForKick = message.split(" ")[1];
             boolean flag = false;

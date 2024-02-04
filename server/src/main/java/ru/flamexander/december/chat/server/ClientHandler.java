@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,7 @@ public class ClientHandler {
             try {
                 authentication();
                 listenUserChatMessages();
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 e.printStackTrace();
             } finally {
                 disconnect();
@@ -37,12 +38,18 @@ public class ClientHandler {
         }).start();
     }
 
-    private void listenUserChatMessages() throws IOException {
+    public void exitFromApp() {
+        sendMessage("/exit_confirmed");
+        server.getUserService().disconnect();
+    }
+
+
+    private void listenUserChatMessages() throws IOException, SQLException {
         while (true) {
             String message = in.readUTF();
             if (message.startsWith("/")) {
                 if (message.equals("/exit")) {
-                    sendMessage("/exit_confirmed");
+                    exitFromApp();
                     break;
                 }
                 if (message.startsWith("/w ")) {
@@ -51,10 +58,13 @@ public class ClientHandler {
                     server.sendPrivateMessage(this, recipient[1], recipient[2]);
                     continue;
                 }
-                if (message.startsWith("/kick ") || message.startsWith("/kick")) {
-                    server.kickUser(message, this);
-                    continue;
-                }
+//                if (message.startsWith("/kick ") || message.startsWith("/kick")) {
+//                    server.kickUser(message, this);
+//                    exitFromApp();
+//                    server.sendPrivateMessage(this, username, "nhfnh");
+//                    continue;
+//                    break;
+//                }
             }
             server.broadcastMessage(username + ": " + message);
         }
@@ -93,7 +103,7 @@ public class ClientHandler {
         }
     }
 
-    private boolean tryToAuthenticate(String message) {
+    private boolean tryToAuthenticate(String message) throws SQLException {
         String[] elements = message.split(" "); // /auth login1 pass1
         if (elements.length != 3) {
             sendMessage("СЕРВЕР: некорректная команда аутентификации");
@@ -126,7 +136,7 @@ public class ClientHandler {
         return elements;
     }
 
-    private boolean register(String message) {
+    private boolean register(String message) throws SQLException {
         String[] elements = checkLengthString(message).toArray(new String[0]);
         if (elements.length != 4) {
             sendMessage("СЕРВЕР: некорректная команда аутентификации");
@@ -153,7 +163,7 @@ public class ClientHandler {
         return true;
     }
 
-    private void authentication() throws IOException {
+    private void authentication() throws IOException, SQLException {
         while (true) {
             String message = in.readUTF();
             boolean isSucceed = false;
