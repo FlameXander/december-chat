@@ -3,12 +3,18 @@ package ru.flamexander.december.chat.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
     private int port;
     private List<ClientHandler> clients;
+    private UserService userService;
+
+    public UserService getUserService() {
+        return userService;
+    }
 
     public Server(int port) {
         this.port = port;
@@ -18,10 +24,13 @@ public class Server {
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.printf("Сервер запущен на порту %d. Ожидание подключения клиентов\n", port);
+//            userService = new InMemoryUserService();
+            userService = new JdbcUserService();
+            System.out.println("Запущен сервис для работы с пользователями");
             while (true) {
                 Socket socket = serverSocket.accept();
                 try {
-                    subscribe(new ClientHandler(this, socket));
+                    new ClientHandler(this, socket);
                 } catch (IOException e) {
                     System.out.println("Не удалось подключить клиента");
                 }
@@ -38,16 +47,56 @@ public class Server {
     }
 
     public synchronized void subscribe(ClientHandler clientHandler) {
+        broadcastMessage("Подключился новый клиент " + clientHandler.getUsername());
         clients.add(clientHandler);
-        System.out.println("Подключился новый клиент " + clientHandler.getUsername());
     }
 
     public synchronized void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
-        System.out.println("Отключился клиент " + clientHandler.getUsername());
+        broadcastMessage("Отключился клиент " + clientHandler.getUsername());
+    }
+
+    public synchronized boolean isUserBusy(String username) {
+        for (ClientHandler c : clients) {
+            if (c.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        boolean flag = false;
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage("From " + sender.getUsername() + ": " + message);
+                sender.sendMessage(sender.getUsername() + ": " + message);
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            sender.sendMessage("user \"" + receiverUsername + "\" undefined");
+        }
+    }
+
+    public void kickUser(String message, ClientHandler admin) throws SQLException {
+        if (getUserService().isUserAdmin(admin.getUsername())) {
+            String userNameForKick = message.split(" ")[1];
+            boolean flag = false;
+            for (ClientHandler cli : clients) {
+                if (cli.getUsername().equals(userNameForKick)) {
+                    broadcastMessage("Клиент " + cli.getUsername() + " был кикнут админом чата");
+                    sendPrivateMessage(admin, cli.getUsername(), "Вы кикнуты");
+                    unsubscribe(cli);
+                    flag = true;
+                }
+            }
+            if (!flag) {
+                admin.sendMessage("Пользователя с именем " + userNameForKick + " не существует");
+            }
+        } else {
+            admin.sendMessage("Нет прав на /kick");
+        }
     }
 }
