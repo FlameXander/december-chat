@@ -44,6 +44,7 @@ public class ClientApplication {
                     e.printStackTrace();
                 } finally {
                     disconnect();
+                    System.exit(0);
                 }
             }).start();
             while (true) {

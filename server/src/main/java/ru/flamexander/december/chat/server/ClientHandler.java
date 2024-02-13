@@ -119,7 +119,7 @@ public class ClientHandler {
 
     private List<String> checkLengthString(String message) {
         List<String> elements = new ArrayList<>(Arrays.asList(message.split(" ")));
-        if (elements.size() == 5 && elements.get(4).equals(keyWordForAdmin)) {  // /auth login1 pass1 user1 key
+        if (elements.size() == 5 && elements.get(4).equals(keyWordForAdmin)) {  // /regiter login1 pass1 user1 key
             elements.set(0, "ADMIN");
             elements.remove(4);
         }

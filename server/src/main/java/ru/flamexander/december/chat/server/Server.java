@@ -78,23 +78,23 @@ public class Server {
         }
     }
 
-    public void kickUser(String message, ClientHandler admin) {
+    public synchronized boolean kickUser(String message, ClientHandler admin) {
         if (getUserService().isUserAdmin(admin.getUsername())) {
             String userNameForKick = message.split(" ")[1];
-            boolean flag = false;
             for (ClientHandler cli : clients) {
                 if (cli.getUsername().equals(userNameForKick)) {
-                    broadcastMessage("Клиент " + cli.getUsername() + " был кикнут админом чата");
                     sendPrivateMessage(admin, cli.getUsername(), "Вы кикнуты");
-                    unsubscribe(cli);
-                    flag = true;
+                    broadcastMessage("Клиент " + cli.getUsername() + " был кикнут админом чата");
+                    cli.sendMessage("/exit_confirmed");
+                    cli.disconnect();
+                    return true;
                 }
             }
-            if (!flag) {
-                admin.sendMessage("Пользователя с именем " + userNameForKick + " не существует");
-            }
+            admin.sendMessage("Пользователя с именем " + userNameForKick + " не существует");
+            return false;
         } else {
             admin.sendMessage("Нет прав на /kick");
         }
+        return false;
     }
 }
