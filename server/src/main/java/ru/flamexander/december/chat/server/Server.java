@@ -9,6 +9,11 @@ import java.util.List;
 public class Server {
     private int port;
     private List<ClientHandler> clients;
+    private UserService userService;
+
+    public UserService getUserService() {
+        return userService;
+    }
 
     public Server(int port) {
         this.port = port;
@@ -18,10 +23,12 @@ public class Server {
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.printf("Сервер запущен на порту %d. Ожидание подключения клиентов\n", port);
+            userService = new InMemoryUserService();
+            System.out.println("Запущен сервис для работы с пользователями");
             while (true) {
                 Socket socket = serverSocket.accept();
                 try {
-                    subscribe(new ClientHandler(this, socket));
+                    new ClientHandler(this, socket);
                 } catch (IOException e) {
                     System.out.println("Не удалось подключить клиента");
                 }
@@ -38,16 +45,56 @@ public class Server {
     }
 
     public synchronized void subscribe(ClientHandler clientHandler) {
+        broadcastMessage("Подключился новый клиент " + clientHandler.getUsername());
         clients.add(clientHandler);
-        System.out.println("Подключился новый клиент " + clientHandler.getUsername());
     }
 
     public synchronized void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
-        System.out.println("Отключился клиент " + clientHandler.getUsername());
+        broadcastMessage("Отключился клиент " + clientHandler.getUsername());
+    }
+
+    public synchronized boolean isUserBusy(String username) {
+        for (ClientHandler c : clients) {
+            if (c.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized void sendPrivateMessage(ClientHandler sender, String receiverUsername, String message) {
-        // TODO homework
+        boolean flag = false;
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendMessage("From " + sender.getUsername() + ": " + message);
+                sender.sendMessage(sender.getUsername() + ": " + message);
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            sender.sendMessage("user \"" + receiverUsername + "\" undefined");
+        }
+    }
+
+    public synchronized boolean kickUser(String message, ClientHandler admin) {
+        if (getUserService().isUserAdmin(admin.getUsername())) {
+            String userNameForKick = message.split(" ")[1];
+            for (ClientHandler cli : clients) {
+                if (cli.getUsername().equals(userNameForKick)) {
+                    sendPrivateMessage(admin, cli.getUsername(), "Вы кикнуты");
+                    broadcastMessage("Клиент " + cli.getUsername() + " был кикнут админом чата");
+                    cli.sendMessage("/exit_confirmed");
+                    cli.disconnect();
+                    return true;
+                }
+            }
+            admin.sendMessage("Пользователя с именем " + userNameForKick + " не существует");
+            return false;
+        } else {
+            admin.sendMessage("Нет прав на /kick");
+        }
+        return false;
     }
 }
